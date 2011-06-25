@@ -1,0 +1,114 @@
+#!/usr/bin/python
+# Usage example for the eventfeed library
+# Copyright (c) 2011 Thomas Perl <thp.io/about>
+
+__license__ = """
+Copyright (c) 2011, Thomas Perl <m@thp.io>
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+"""
+
+from PySide.QtCore import QCoreApplication
+
+import datetime
+import time
+import os
+import sys
+
+from eventfeed import EventFeedService, EventFeedItem
+
+app = QCoreApplication(sys.argv)
+
+def on_data_received(*args):
+    print 'CLIENT received DATA:', args
+
+service = EventFeedService('example', 'Event Feed Example', on_data_received)
+
+print 'the service name for this is:', service.local_name
+print '(add this to your .service file for auto-invocation on callback)'
+icon = '/usr/share/themes/blanco/meegotouch/icons/icon-l-rss.png'
+icon2 = '/usr/share/pixmaps/gpodder.png'
+icon3 = '/home/user/MyDocs/pyside.png'
+
+item = EventFeedItem(icon, 'Wanna do that?')
+item.set_body('Yes!')
+
+def callback():
+    print 'ohai! received something :)'
+    service.remove_items()
+    app.exit()
+
+item.set_custom_action(callback)
+service.add_item(item)
+
+item = EventFeedItem(icon, 'Wanna do that?')
+item.set_body('Nope.')
+
+def callback():
+    print 'ohai! received something :)'
+    service.remove_items()
+    sys.exit(0)
+
+item.set_custom_action(callback)
+service.add_item(item)
+
+item = EventFeedItem(icon2, 'Custom Data Action')
+item.set_body('Touch me to send some data to the App!')
+item.set_action_data('go', 'to', 23, True)
+service.add_item(item)
+
+app.exec_()
+
+item = EventFeedItem(icon, 'New episode available')
+item.set_body('Body body!')
+service.add_item(item)
+
+for i in range(101):
+    # You can change the footer text of the feed item later on
+    item.set_footer('Downloading %d%%...' % i)
+    service.update_item(item)
+    time.sleep(.05)
+
+item.set_footer('Download complete. Touch to play.')
+service.update_item(item)
+
+# Thumbnail with a "video" icon overlay (play button)
+item = EventFeedItem(icon, 'New episode available')
+item.set_body('Video!')
+item.set_image_list(['/home/user/MyDocs/gPodder/Downloads/The Moth Podcast/folder.jpg'])
+item.set_video(True)
+service.add_item(item)
+
+# If you want to add events that didn't happen "now", you
+# can pass a datetime.datetime() object to this function.
+one_hour_ago = datetime.datetime.now() - datetime.timedelta(seconds=60*60)
+item = EventFeedItem(icon2, 'Oh oh OLD URL action', one_hour_ago)
+item.set_body('Click to see a website')
+item.set_url('http://gpodder.net/')
+service.add_item(item)
+
+time.sleep(3)
+
+import this
+for idx, line in enumerate(this.s.encode("rot13").splitlines()):
+    item = EventFeedItem(icon3, 'The Zen of Python, part %d' % (idx+1))
+    item.set_body(line)
+    service.add_item(item)
+    time.sleep(1.5)
+    if idx % 3 == 2:
+        time.sleep(1)
+        service.remove_items()
+
+service.remove_items()
+
+
